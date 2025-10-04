@@ -1,73 +1,638 @@
 <!DOCTYPE html>
 <html>
-
-    <title>About</title>
-    <link
-      href="{{url_for('static',filename='about.css')}}"
-      rel="stylesheet"
-      type="text/css"
-    />
-     <link
-      href="{{url_for('static',filename='stylesheet.css')}}"
-      rel="stylesheet"
-      type="text/css"
-    />
+<head>
+    <title>Info - Space Debris Explorer</title>
+    <link href="{{url_for('static',filename='about.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{url_for('static',filename='stylesheet.css')}}" rel="stylesheet" type="text/css" />
     
-    <body>
-        <div class="header">
-            <header class="primary-header flex">
-                <nav>
-                    <ul
-                    id="primary-navigation"
-                    data-visible="false"
-                    class="primary-navigation underline-indicators flex"
-                    >
+    <!-- Required Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem auto;
+            max-width: 1200px;
+            padding: 0 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            color: #fff;
+        }
+
+        .developments {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .globe-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem auto;
+            text-align: center;
+            max-width: 1200px;
+        }
+
+        #globe {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            background: #000;
+            margin: 1rem 0;
+        }
+
+        .controls {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .btn.active {
+            background: #ffd700;
+            color: #333;
+            border-color: #ffd700;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: #fff;
+        }
+
+        .fun-facts {
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem auto;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            max-width: 1200px;
+        }
+
+        .fun-facts h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: #ffd700;
+        }
+
+        .facts-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .facts-list li {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .facts-list li:before {
+            content: "🌟 ";
+            margin-right: 0.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            #globe {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <header class="primary-header flex">
+            <nav>
+                <ul id="primary-navigation" data-visible="false" class="primary-navigation underline-indicators flex">
                     <li>
-                        <a
-                        class="ff-sans-cond uppercase text-white letter-spacing-2"
-                        href=""
-                        >Home</a
-                        >
+                        <a class="ff-sans-cond uppercase text-white letter-spacing-2" href="{{ url_for('home') }}">Home</a>
+                    </li>
+                    <li>
+                        <a class="ff-sans-cond uppercase text-white letter-spacing-2" href="{{ url_for('about') }}">About</a>
+                    </li>
+                    <li>
+                        <a class="ff-sans-cond uppercase text-white letter-spacing-2" href="{{ url_for('team') }}">Team</a>
                     </li>
                     <li class="active">
-                        <a
-                        class="ff-sans-cond uppercase text-white letter-spacing-2"
-                        href="{{ url_for('about') }}"
-                        >About</a
-                        >
-                    </li>
-                    <li>
-                        <a
-                        class="ff-sans-cond uppercase text-white letter-spacing-2"
-                        href="{{ url_for('team') }}"
-                        >Team</a
-                        >
-                    </li>
-                                        <li>
-                        <a
-                        class="ff-sans-cond uppercase text-white letter-spacing-2"
-                        href="{{ url_for('info') }}"
-                        >Info</a
-                        >
+                        <a class="ff-sans-cond uppercase text-white letter-spacing-2" href="{{ url_for('info') }}">Info</a>
                     </li>         
-                    </ul>
-                </nav>
-                </header>
-            <div class="title">
-                <h1  class="ff-serif">INFO</h1>
-                <br>
-                <h4  class="ff-serif">Lets explore more</h3>
-            </div>
+                </ul>
+            </nav>
+        </header>
+        <div class="title">
+            <h1 class="ff-serif">SPACE DEBRIS INFO</h1>
+            <br>
+            <h4 class="ff-serif">Let's explore the universe of space junk!</h4>
         </div>
-        <br>
+    </div>
+
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading space debris data from orbit...</p>
+    </div>
+
+    <div id="content" style="display: none;">
         <section class="developments">
-            <div class="developments">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-debris">0</div>
+                    <div class="stat-label">Total Debris Pieces</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avg-altitude">0</div>
+                    <div class="stat-label">Average Altitude (km)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="countries">0</div>
+                    <div class="stat-label">Countries Tracked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">28,000</div>
+                    <div class="stat-label">Speed (km/h) ⚡</div>
+                </div>
+            </div>
+
+            <!-- 3D Globe -->
+            <div class="globe-container">
+                <h2 style="color: #ffd700;">🌐 Interactive 3D Earth with Debris</h2>
+                <div id="globe"></div>
+                <div class="controls">
+                    <button class="btn active" onclick="toggleDebris()">Show Debris</button>
+                    <button class="btn" onclick="toggleRotation()">Auto Rotate</button>
+                    <button class="btn" onclick="resetView()">Reset View</button>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3 class="chart-title">📊 Debris by Altitude</h3>
+                    <div id="altitude-chart"></div>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">🌍 Top 10 Countries</h3>
+                    <div id="country-chart"></div>
+                </div>
+            </div>
+
+            <div class="chart-container" style="margin-bottom: 2rem;">
+                <h3 class="chart-title">📈 Debris Growth Over Time</h3>
+                <div id="timeline-chart"></div>
+            </div>
+
+            <!-- Fun Facts -->
+            <div class="fun-facts">
+                <h2>🚀 Amazing Space Debris Facts!</h2>
+                <ul class="facts-list" id="facts-list">
+                    <li>Loading amazing facts...</li>
+                </ul>
             </div>
         </section>
-        <br>
-        <footer>
-            <h6 class="ff-serif">This work is presented as a project for NASA INTERNATIONAL SPACEAPPS CHALLENGE 2025</h4>
-        </footer>
+    </div>
 
-    </body>
+    <script>
+        // Global variables
+        let debrisData = [];
+        let scene, camera, renderer, earth, debrisPoints;
+        let rotationEnabled = true;
+        let debrisVisible = true;
+
+        // Initialize everything
+        async function init() {
+            try {
+                console.log('Fetching debris data...');
+                
+                // Fetch debris data
+                const response = await fetch('/api/debris');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('Debris data received:', data);
+                debrisData = data.debris || [];
+
+                // Fetch stats
+                const statsResponse = await fetch('/api/stats');
+                if (!statsResponse.ok) {
+                    throw new Error(`HTTP error! status: ${statsResponse.status}`);
+                }
+                const stats = await statsResponse.json();
+                console.log('Stats received:', stats);
+
+                // Update stats cards
+                updateStats(stats, debrisData);
+
+                // Initialize 3D globe
+                init3DGlobe();
+
+                // Create charts
+                createCharts(stats, debrisData);
+
+                // Create fun facts
+                createFunFacts(debrisData.length);
+
+                // Hide loading, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerHTML = '<p>⚠️ Error loading data: ' + error.message + '</p><p>Please check the console for details.</p>';
+            }
+        }
+
+        function updateStats(stats, debris) {
+            document.getElementById('total-debris').textContent = stats.total_debris.toLocaleString();
+            
+            // Calculate average altitude
+            let totalAlt = 0;
+            let count = 0;
+            debris.forEach(d => {
+                if (d.altitude_km) {
+                    totalAlt += d.altitude_km;
+                    count++;
+                }
+            });
+            const avgAlt = count > 0 ? Math.round(totalAlt / count) : 0;
+            document.getElementById('avg-altitude').textContent = avgAlt.toLocaleString();
+            
+            document.getElementById('countries').textContent = Object.keys(stats.by_country).length;
+        }
+
+        function init3DGlobe() {
+            const container = document.getElementById('globe');
+            if (!container) {
+                console.error('Globe container not found');
+                return;
+            }
+
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Scene
+            scene = new THREE.Scene();
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            camera.position.z = 3;
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setClearColor(0x000000);
+            container.appendChild(renderer.domElement);
+
+            // Earth
+            const geometry = new THREE.SphereGeometry(1, 32, 32);
+            const texture = new THREE.MeshPhongMaterial({
+                color: 0x2233ff,
+                emissive: 0x112244,
+                shininess: 30
+            });
+            earth = new THREE.Mesh(geometry, texture);
+            scene.add(earth);
+
+            // Add atmosphere glow
+            const glowGeometry = new THREE.SphereGeometry(1.05, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4488ff,
+                transparent: true,
+                opacity: 0.2
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            scene.add(glow);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 1);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 3, 5);
+            scene.add(directionalLight);
+
+            // Add debris points
+            createDebrisPoints();
+
+            // Animation
+            animate();
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                const newWidth = container.clientWidth;
+                const newHeight = container.clientHeight;
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(newWidth, newHeight);
+            });
+
+            // Mouse interaction
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                rotationEnabled = false;
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaMove = {
+                        x: e.offsetX - previousMousePosition.x,
+                        y: e.offsetY - previousMousePosition.y
+                    };
+
+                    earth.rotation.y += deltaMove.x * 0.01;
+                    earth.rotation.x += deltaMove.y * 0.01;
+                    
+                    if (debrisPoints) {
+                        debrisPoints.rotation.y += deltaMove.x * 0.01;
+                        debrisPoints.rotation.x += deltaMove.y * 0.01;
+                    }
+                }
+
+                previousMousePosition = {
+                    x: e.offsetX,
+                    y: e.offsetY
+                };
+            });
+
+            container.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        }
+
+        function createDebrisPoints() {
+            if (debrisData.length === 0) {
+                console.warn('No debris data available for visualization');
+                return;
+            }
+
+            const pointsGeometry = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+
+            // Create points for debris (sample 500 for performance)
+            const sampleSize = Math.min(500, debrisData.length);
+            for (let i = 0; i < sampleSize; i++) {
+                const debris = debrisData[Math.floor(Math.random() * debrisData.length)];
+                
+                // Random position in orbital shell (1.1 to 1.5 Earth radius)
+                const radius = 1.1 + Math.random() * 0.4;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+
+                positions.push(
+                    radius * Math.sin(phi) * Math.cos(theta),
+                    radius * Math.sin(phi) * Math.sin(theta),
+                    radius * Math.cos(phi)
+                );
+
+                // Color based on altitude
+                const alt = debris.altitude_km || 500;
+                if (alt < 1000) {
+                    colors.push(1, 0, 0); // Red - low orbit
+                } else if (alt < 10000) {
+                    colors.push(1, 1, 0); // Yellow - medium orbit
+                } else {
+                    colors.push(0, 1, 0); // Green - high orbit
+                }
+            }
+
+            pointsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            pointsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            const pointsMaterial = new THREE.PointsMaterial({
+                size: 0.02,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            debrisPoints = new THREE.Points(pointsGeometry, pointsMaterial);
+            scene.add(debrisPoints);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (rotationEnabled) {
+                earth.rotation.y += 0.002;
+                if (debrisPoints) {
+                    debrisPoints.rotation.y += 0.002;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function toggleDebris() {
+            debrisVisible = !debrisVisible;
+            if (debrisPoints) {
+                debrisPoints.visible = debrisVisible;
+            }
+            event.target.classList.toggle('active');
+        }
+
+        function toggleRotation() {
+            rotationEnabled = !rotationEnabled;
+            event.target.classList.toggle('active');
+        }
+
+        function resetView() {
+            camera.position.set(0, 0, 3);
+            earth.rotation.set(0, 0, 0);
+            if (debrisPoints) {
+                debrisPoints.rotation.set(0, 0, 0);
+            }
+            rotationEnabled = true;
+        }
+
+        function createCharts(stats, debris) {
+            // Altitude chart
+            const altitudeData = [{
+                x: Object.keys(stats.by_altitude),
+                y: Object.values(stats.by_altitude),
+                type: 'bar',
+                marker: {
+                    color: ['#ff6b6b', '#ffd93d', '#6bcf7f']
+                }
+            }];
+
+            Plotly.newPlot('altitude-chart', altitudeData, {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#fff' },
+                margin: { t: 20, b: 40, l: 60, r: 20 }
+            }, {responsive: true});
+
+            // Country chart - top 10
+            const countries = stats.by_country;
+            const sortedCountries = Object.entries(countries)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            const countryData = [{
+                x: sortedCountries.map(c => c[0]),
+                y: sortedCountries.map(c => c[1]),
+                type: 'bar',
+                marker: { color: '#00d4ff' }
+            }];
+
+            Plotly.newPlot('country-chart', countryData, {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#fff' },
+                margin: { t: 20, b: 60, l: 60, r: 20 }
+            }, {responsive: true});
+
+            // Timeline chart - group by year
+            const yearCounts = {};
+            debris.forEach(d => {
+                if (d.launch_date) {
+                    const year = d.launch_date.substring(0, 4);
+                    yearCounts[year] = (yearCounts[year] || 0) + 1;
+                }
+            });
+
+            const sortedYears = Object.entries(yearCounts).sort();
+            const cumulativeCounts = [];
+            let cumulative = 0;
+            sortedYears.forEach(([year, count]) => {
+                cumulative += count;
+                cumulativeCounts.push(cumulative);
+            });
+
+            const timelineData = [{
+                x: sortedYears.map(y => y[0]),
+                y: cumulativeCounts,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#ffd700', width: 3 },
+                marker: { size: 6 }
+            }];
+
+            Plotly.newPlot('timeline-chart', timelineData, {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#fff' },
+                xaxis: { title: 'Year' },
+                yaxis: { title: 'Cumulative Debris' },
+                margin: { t: 20, b: 60, l: 60, r: 20 }
+            }, {responsive: true});
+        }
+
+        function createFunFacts(total) {
+            const facts = [
+                `There are ${total.toLocaleString()} pieces of tracked space debris orbiting Earth right now!`,
+                `Space debris travels at about 28,000 km/h - that's 20 times faster than a bullet!`,
+                `Even a tiny paint fleck can damage a spacecraft because of the incredible speed`,
+                `The International Space Station has to dodge space debris several times a year`,
+                `Some debris will orbit Earth for hundreds of years before falling back down`,
+                `Scientists track debris as small as a marble to protect satellites and astronauts`,
+                `A collision between two satellites in 2009 created over 2,000 new pieces of debris`,
+                `Debris in low orbit eventually falls back to Earth and burns up in the atmosphere`
+            ];
+
+            const factsList = document.getElementById('facts-list');
+            if (factsList) {
+                factsList.innerHTML = facts.map(fact => `<li>${fact}</li>`).join('');
+            }
+        }
+
+        // Start the app when page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
 </html>
