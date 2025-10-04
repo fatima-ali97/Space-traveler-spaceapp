@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+    <title>About</title>
+    <link
+      href="{{url_for('static',filename='about.css')}}"
+      rel="stylesheet"
+      type="text/css"
+    />
+     <link
+      href="{{url_for('static',filename='stylesheet.css')}}"
+      rel="stylesheet"
+      type="text/css"
+    />
+    
+    <body>
+        <div class="header">
+            <header class="primary-header flex">
+                <nav>
+                    <ul
+                    id="primary-navigation"
+                    data-visible="false"
+                    class="primary-navigation underline-indicators flex"
+                    >
+                    <li>
+                        <a
+                        class="ff-sans-cond uppercase text-white letter-spacing-2"
+                        href=""
+                        >Home</a
+                        >
+                    </li>
+                    <li class="active">
+                        <a
+                        class="ff-sans-cond uppercase text-white letter-spacing-2"
+                        href="{{ url_for('about') }}"
+                        >About</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                        class="ff-sans-cond uppercase text-white letter-spacing-2"
+                        href="{{ url_for('team') }}"
+                        >Team</a
+                        >
+                    </li>
+                    </ul>
+                </nav>
+                </header>
+            <div class="title">
+                <h1  class="ff-serif">INFO</h1>
+                <br>
+                <h4  class="ff-serif">Lets explore more</h3>
+            </div>
+        </div>
+        <br>
+        <section class="developments">
+            <div class="developments">
+            </div>
+        </section>
+        <br>
+        <section class="Thanks">
+            <div class="thanks">
+                <h2 class="ff-serif">Special Thanks for Mrs. Ayesha and Mr. Salman</h2>
+                <h3 class="ff-serif">for thier supervising and thier assist</h3>
+            </div>
+        </section>
+        <footer>
+            <h6 class="ff-serif">This work is presented as a final project for TechStride Program 2025</h4>
+        </footer>
+
+    </body>
+</html>

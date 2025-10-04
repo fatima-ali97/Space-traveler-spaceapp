@@ -28,6 +28,10 @@ def team():
 def about():
     return render_template('about.html')
 
+@app.route('/info')
+def info():
+    return render_template('info.html')
+
 @app.route('/predict', methods=["POST","GET"])
 def predict():
     if 'file' not in request.files:
