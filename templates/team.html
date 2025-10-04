@@ -13,6 +13,54 @@
   />
   <br />
   <body>
+    <header class="primary-header flex">
+      <div>
+        <img
+          src="{{url_for('static',filename='logo.png')}}"
+          alt="logo"
+          class="logo"
+        />
+      </div>
+      <button class="mobile-nav-toggle" aria-controls="primary-navigation">
+        <span class="sr-only" aria-expanded="false">Menu</span>
+      </button>
+      <nav>
+        <ul
+          id="primary-navigation"
+          data-visible="false"
+          class="primary-navigation underline-indicators flex"
+        >
+          <li class="active">
+            <a
+              class="ff-sans-cond uppercase text-white letter-spacing-2"
+              href="#"
+              >Home</a
+            >
+          </li>
+          <li>
+            <a
+              class="ff-sans-cond uppercase text-white letter-spacing-2"
+              href="{{ url_for('about') }}"
+              >About</a
+            >
+          </li>
+          <li>
+            <a
+              class="ff-sans-cond uppercase text-white letter-spacing-2"
+              href="{{ url_for('team') }}"
+              >Team</a
+            >
+          </li>
+          <li>
+            <a
+              class="ff-sans-cond uppercase text-white letter-spacing-2"
+              href="{{ url_for('info') }}"
+              >Info</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </header>
     <section class="title-section">
       <div class="team-title">
         <h1>Meet the team</h1>
